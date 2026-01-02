@@ -37,14 +37,10 @@ const NotificationDropdown: React.FC = () => {
   // Listen for real-time notifications
   useEffect(() => {
     if (!socket) {
-      console.log("⚠️ Socket not connected for notifications");
       return;
     }
 
-    console.log("✅ Setting up socket listener for 'new_notification' event");
-
     socket.on("new_notification", (notification: Notification) => {
-      console.log("🔔 New notification received via socket:", notification);
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
 
@@ -58,7 +54,6 @@ const NotificationDropdown: React.FC = () => {
     });
 
     return () => {
-      console.log("🗑️ Cleaning up socket listener for notifications");
       socket.off("new_notification");
     };
   }, [socket]);

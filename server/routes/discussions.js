@@ -33,10 +33,6 @@ const createNotification = async (
   io = null
 ) => {
   try {
-    console.log(
-      `📝 Creating ${type} notification for user ${userId} from ${fromUsername}`
-    );
-
     const notification = await prisma.notification.create({
       data: {
         userId,
@@ -49,8 +45,6 @@ const createNotification = async (
         fromUsername,
       },
     });
-
-    console.log(`✅ Notification created successfully, ID: ${notification.id}`);
 
     // Emit real-time notification if io is available
     if (io) {
@@ -67,17 +61,10 @@ const createNotification = async (
         is_read: false,
         created_at: notification.createdAt.toISOString(),
       };
-      console.log(
-        `🔗 IO object available, emitting notification via socket...`
-      );
       emitNotification(io, userId, notificationData);
-    } else {
-      console.warn(
-        `⚠️  IO object not available for real-time notification. User will rely on polling.`
-      );
     }
   } catch (error) {
-    console.error("❌ Error creating notification:", error);
+    console.error("Error creating notification:", error);
   }
 };
 
@@ -355,25 +342,14 @@ router.post("/:id/answers", authenticateToken, async (req, res) => {
 
     // Handle mentions
     const mentions = extractMentions(content);
-    console.log(`🔍 Mentions found in content:`, mentions);
 
     for (const mentionedUsername of mentions) {
-      console.log(`🔎 Processing mention: @${mentionedUsername}`);
-
       const mentionedUser = await prisma.user.findUnique({
         where: { username: mentionedUsername },
       });
 
       if (mentionedUser) {
-        console.log(
-          `✅ User @${mentionedUsername} found (ID: ${mentionedUser.id})`
-        );
-
         if (mentionedUser.id !== req.user.id) {
-          console.log(
-            `📬 Creating mention notification for ${mentionedUsername}`
-          );
-
           await createNotification(
             mentionedUser.id,
             "mention",
@@ -385,17 +361,12 @@ router.post("/:id/answers", authenticateToken, async (req, res) => {
             req.user.username,
             req.io
           );
-        } else {
-          console.log(`↩️  Skipping self-mention`);
         }
-      } else {
-        console.warn(`⚠️  User @${mentionedUsername} not found in database`);
       }
     }
 
     // Emit real-time event
     if (req.io) {
-      console.log("🚀 Emitting new answer event:", id);
       emitNewAnswer(req.io, id, {
         ...answer,
         author_username: req.user.username,
@@ -427,7 +398,6 @@ router.post(
   "/answers/:answerId/replies",
   authenticateToken,
   async (req, res) => {
-    console.log("🔥 Reply route hit! AnswerId:", req.params.answerId);
     try {
       const { answerId } = req.params;
       const { content, images } = req.body;
@@ -474,25 +444,14 @@ router.post(
 
       // Handle mentions
       const mentions = extractMentions(content);
-      console.log(`🔍 Mentions found in reply:`, mentions);
 
       for (const mentionedUsername of mentions) {
-        console.log(`🔎 Processing mention in reply: @${mentionedUsername}`);
-
         const mentionedUser = await prisma.user.findUnique({
           where: { username: mentionedUsername },
         });
 
         if (mentionedUser) {
-          console.log(
-            `✅ User @${mentionedUsername} found (ID: ${mentionedUser.id})`
-          );
-
           if (mentionedUser.id !== req.user.id) {
-            console.log(
-              `📬 Creating mention notification for ${mentionedUsername} in reply`
-            );
-
             await createNotification(
               mentionedUser.id,
               "mention",
@@ -504,21 +463,12 @@ router.post(
               req.user.username,
               req.io
             );
-          } else {
-            console.log(`↩️  Skipping self-mention in reply`);
           }
-        } else {
-          console.warn(`⚠️  User @${mentionedUsername} not found in database`);
         }
       }
 
       // Emit real-time event
       if (req.io) {
-        console.log(
-          "🚀 Emitting new reply event:",
-          answer.discussionId,
-          answerId
-        );
         emitNewReply(req.io, answer.discussionId, answerId, {
           ...reply,
           author_username: req.user.username,
