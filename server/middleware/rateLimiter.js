@@ -1,33 +1,9 @@
 import rateLimit from "express-rate-limit";
 
-// Initialize Redis client for distributed rate limiting (optional)
-let redisClient = null;
-let useRedis = false;
-
-const initializeRedisClient = async () => {
-  try {
-    const { createClient } = await import("redis");
-    redisClient = createClient({
-      url: process.env.REDIS_URL || "redis://localhost:6379",
-    });
-    await redisClient.connect();
-    useRedis = true;
-    console.log("✅ Rate limiter using Redis for distributed systems");
-  } catch (error) {
-    console.log(
-      "⚠️  Redis not available, using in-memory store",
-      error.message
-    );
-    useRedis = false;
-  }
-};
-
-initializeRedisClient().catch(console.error);
-
-// General API Rate Limit: 100 requests per 15 minutes per IP
+// General API Rate Limit: 500 requests per 15 minutes per IP
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   message: {
     error: "Too many requests from this IP, please try again later.",
     retryAfter: "15 minutes",
@@ -175,11 +151,9 @@ export const strictAuthLimiter = rateLimit({
 export const createCustomLimiter = (options = {}) => {
   const defaults = {
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 500,
     standardHeaders: true,
     legacyHeaders: false,
   };
   return rateLimit({ ...defaults, ...options });
 };
-
-export { useRedis, redisClient };

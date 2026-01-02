@@ -18,7 +18,6 @@ import feedbackRoutes from "./routes/feedback.js";
 import pdfChatRoutes from "./routes/pdfChat.js";
 import sitemapRoutes from "./routes/sitemap.js";
 import { setupSocketHandlers } from "./socket/socketHandlers.js";
-import initRedis from "./utils/redis.js";
 import {
   generalLimiter,
   authLimiter,
@@ -34,14 +33,6 @@ BigInt.prototype.toJSON = function () {
 
 // Load environment variables
 dotenv.config();
-
-// Initialize Redis (optional - will work without it)
-initRedis().catch((err) => {
-  console.log(
-    "⚠️  Redis not available, continuing without cache:",
-    err.message
-  );
-});
 
 const app = express();
 const server = createServer(app);
